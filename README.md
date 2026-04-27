@@ -11,7 +11,10 @@ Open `index.html` in any modern browser. No build step, no dependencies — just
 - **Arrow Keys** — Move left/right
 - **Space / Z** — Fire
 - **M** — Mute/unmute audio
-- Touch controls appear automatically on mobile devices
+
+### Mobile
+
+Touch controls appear automatically on smaller screens, styled with an art deco brass instrument panel aesthetic. A finger-position steering track on the left directly maps your touch position to the player, and a domed red fire button on the right handles shooting.
 
 ## Game Features
 
@@ -45,7 +48,7 @@ Each round increases enemy counts and speeds. The game scales endlessly.
 
 ### Audio
 
-Full sound design with procedural and file-based audio — background music that switches between normal and boss themes, sound effects for every action, and an ambient lightning storm that intensifies during boss fights.
+17 sound effects and 2 music tracks loaded via Web Audio API for gapless looping. Background music switches between normal and boss themes. Sound effects cover every action — shooting, enemy spawns, boss attacks, lightning strikes, and more. All audio files are in the `assets/` folder.
 
 ## Credits
 

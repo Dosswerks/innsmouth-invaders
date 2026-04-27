@@ -47,60 +47,191 @@
         }
         #touch-slider-area {
             flex: 1;
-            height: 70px;
-            background: #0a1628;
-            border: 2px solid #2d5a3d;
-            border-radius: 10px;
+            height: 80px;
+            background: linear-gradient(180deg, #2a2a28 0%, #1a1a18 40%, #222220 100%);
+            border: 3px solid #8a7a50;
+            border-radius: 14px;
             position: relative;
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
+            box-shadow:
+                inset 0 2px 6px rgba(0,0,0,0.7),
+                0 1px 0 rgba(180,160,100,0.15);
+            overflow: hidden;
         }
+        /* Inner groove track */
+        #touch-slider-area::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 16px;
+            right: 16px;
+            height: 14px;
+            transform: translateY(-50%);
+            background: #111;
+            border: 2px solid #6a5a38;
+            border-radius: 7px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+        }
+        /* Tick marks */
+        #touch-slider-area::after {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 24px;
+            right: 24px;
+            height: 8px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                transparent 8px,
+                #6a5a38 8px,
+                #6a5a38 9px
+            );
+            opacity: 0.5;
+        }
+        /* Corner rivets */
+        #touch-slider-rivet-tl, #touch-slider-rivet-tr,
+        #touch-slider-rivet-bl, #touch-slider-rivet-br {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #b8a870, #6a5a38 70%, #4a3a20);
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        #touch-slider-rivet-tl { top: 6px; left: 6px; }
+        #touch-slider-rivet-tr { top: 6px; right: 6px; }
+        #touch-slider-rivet-bl { bottom: 6px; left: 6px; }
+        #touch-slider-rivet-br { bottom: 6px; right: 6px; }
         #touch-slider-thumb {
             display: none;
         }
         #touch-slider-label {
             position: absolute;
+            top: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #b8a870;
+            font-size: 9px;
+            font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 2;
+            background: #2a2a28;
+            padding: 0 6px;
+            border: 1px solid #6a5a38;
+            border-radius: 3px;
+        }
+        /* LEFT / RIGHT labels */
+        #touch-slider-left-label, #touch-slider-right-label {
+            position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            width: 100%;
-            text-align: center;
-            color: #8a9a8a;
-            font-size: 11px;
+            color: #8a7a50;
+            font-size: 9px;
             font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 2px;
+            pointer-events: none;
+            z-index: 2;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.6);
+        }
+        #touch-slider-left-label { left: 20px; }
+        #touch-slider-right-label { right: 20px; }
+        #touch-fire-wrap {
+            flex-shrink: 0;
+            width: 110px;
+            height: 80px;
+            background: linear-gradient(180deg, #2a2a28 0%, #1a1a18 40%, #222220 100%);
+            border: 3px solid #8a7a50;
+            border-radius: 14px;
+            position: relative;
+            box-shadow:
+                inset 0 2px 6px rgba(0,0,0,0.7),
+                0 1px 0 rgba(180,160,100,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        /* Corner rivets on fire plate */
+        #touch-fire-wrap .rivet {
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #b8a870, #6a5a38 70%, #4a3a20);
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.5);
+        }
+        #touch-fire-wrap .rivet-tl { top: 5px; left: 5px; }
+        #touch-fire-wrap .rivet-tr { top: 5px; right: 5px; }
+        #touch-fire-wrap .rivet-bl { bottom: 5px; left: 5px; }
+        #touch-fire-wrap .rivet-br { bottom: 5px; right: 5px; }
+        /* Deco lines left and right of button */
+        #touch-fire-wrap::before, #touch-fire-wrap::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 16px;
+            height: 2px;
+            background: #6a5a38;
+            transform: translateY(-50%);
+        }
+        #touch-fire-wrap::before { left: 8px; }
+        #touch-fire-wrap::after { right: 8px; }
+        /* Brass ring */
+        #touch-fire-ring {
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #b8a870 0%, #8a7a50 40%, #6a5a38 70%, #4a3a20 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 2px 6px rgba(0,0,0,0.6),
+                inset 0 1px 2px rgba(255,255,255,0.15);
             pointer-events: none;
         }
         #touch-fire-btn {
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, #c44040, #8a2a2a 50%, #5a1a1a 100%);
-            border: 4px solid #4a1515;
+            background: radial-gradient(circle at 38% 35%, #c44040, #8a2222 55%, #5a1515 100%);
+            border: 2px solid #6a3030;
             box-shadow:
-                0 4px 8px rgba(0,0,0,0.6),
-                inset 0 2px 4px rgba(255,180,180,0.25),
-                inset 0 -3px 6px rgba(0,0,0,0.4);
+                inset 0 2px 4px rgba(255,180,180,0.2),
+                inset 0 -3px 6px rgba(0,0,0,0.5),
+                0 3px 6px rgba(0,0,0,0.5);
             color: #c8a832;
-            font-size: 13px;
+            font-size: 12px;
             font-family: monospace;
             font-weight: bold;
-            line-height: 80px;
+            letter-spacing: 2px;
+            line-height: 50px;
             text-align: center;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-            flex-shrink: 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.7);
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
             transition: transform 0.05s, box-shadow 0.05s;
+            pointer-events: auto;
         }
         #touch-fire-btn:active, #touch-fire-btn.active {
-            background: radial-gradient(circle at 40% 40%, #e05050, #aa3535 50%, #6a2020 100%);
-            border-color: #6a2020;
+            background: radial-gradient(circle at 42% 42%, #e05050, #aa3030 55%, #6a1a1a 100%);
             box-shadow:
-                0 2px 4px rgba(0,0,0,0.6),
-                inset 0 1px 2px rgba(255,200,200,0.2),
-                inset 0 -2px 4px rgba(0,0,0,0.5);
-            transform: scale(0.95);
+                inset 0 1px 2px rgba(255,200,200,0.15),
+                inset 0 -2px 4px rgba(0,0,0,0.6),
+                0 1px 3px rgba(0,0,0,0.5);
+            transform: scale(0.94);
         }
     </style>
 </head>
@@ -3130,16 +3261,46 @@
         sliderArea.id = 'touch-slider-area';
         var label = document.createElement('div');
         label.id = 'touch-slider-label';
-        label.textContent = '\u25C0 TOUCH TO STEER \u25B6';
+        label.textContent = 'STEER';
+        // Corner rivets
+        var rivetTL = document.createElement('div'); rivetTL.id = 'touch-slider-rivet-tl';
+        var rivetTR = document.createElement('div'); rivetTR.id = 'touch-slider-rivet-tr';
+        var rivetBL = document.createElement('div'); rivetBL.id = 'touch-slider-rivet-bl';
+        var rivetBR = document.createElement('div'); rivetBR.id = 'touch-slider-rivet-br';
+        // Left/Right labels
+        var leftLabel = document.createElement('div'); leftLabel.id = 'touch-slider-left-label';
+        leftLabel.textContent = '\u25C0';
+        var rightLabel = document.createElement('div'); rightLabel.id = 'touch-slider-right-label';
+        rightLabel.textContent = '\u25B6';
         sliderArea.appendChild(label);
+        sliderArea.appendChild(rivetTL);
+        sliderArea.appendChild(rivetTR);
+        sliderArea.appendChild(rivetBL);
+        sliderArea.appendChild(rivetBR);
+        sliderArea.appendChild(leftLabel);
+        sliderArea.appendChild(rightLabel);
 
-        // Fire button
+        // Fire button with brass plate
+        var fireWrap = document.createElement('div');
+        fireWrap.id = 'touch-fire-wrap';
+        // Rivets
+        var rTL = document.createElement('div'); rTL.className = 'rivet rivet-tl';
+        var rTR = document.createElement('div'); rTR.className = 'rivet rivet-tr';
+        var rBL = document.createElement('div'); rBL.className = 'rivet rivet-bl';
+        var rBR = document.createElement('div'); rBR.className = 'rivet rivet-br';
+        fireWrap.appendChild(rTL); fireWrap.appendChild(rTR);
+        fireWrap.appendChild(rBL); fireWrap.appendChild(rBR);
+        // Brass ring + button
+        var fireRing = document.createElement('div');
+        fireRing.id = 'touch-fire-ring';
         var fireBtn = document.createElement('div');
         fireBtn.id = 'touch-fire-btn';
         fireBtn.textContent = 'FIRE';
+        fireRing.appendChild(fireBtn);
+        fireWrap.appendChild(fireRing);
 
         inner.appendChild(sliderArea);
-        inner.appendChild(fireBtn);
+        inner.appendChild(fireWrap);
         container.appendChild(inner);
         document.body.insertBefore(container, document.getElementById('credits'));
 
@@ -3180,21 +3341,21 @@
         sliderArea.addEventListener('touchend', function(e) { e.preventDefault(); endSteer(); });
         sliderArea.addEventListener('touchcancel', function(e) { endSteer(); });
 
-        // Fire button logic
-        fireBtn.addEventListener('touchstart', function(e) {
+        // Fire button logic — bind to whole plate area
+        fireWrap.addEventListener('touchstart', function(e) {
             e.preventDefault();
             keys['Space'] = true;
             firePressed = true;
             lastInputSource = 'touch';
             fireBtn.classList.add('active');
         });
-        fireBtn.addEventListener('touchend', function(e) {
+        fireWrap.addEventListener('touchend', function(e) {
             e.preventDefault();
             keys['Space'] = false;
             keys._fireHeld = false;
             fireBtn.classList.remove('active');
         });
-        fireBtn.addEventListener('touchcancel', function(e) {
+        fireWrap.addEventListener('touchcancel', function(e) {
             keys['Space'] = false;
             keys._fireHeld = false;
             fireBtn.classList.remove('active');
