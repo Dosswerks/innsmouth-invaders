@@ -2424,10 +2424,6 @@
         if (audioInitialized) return;
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            // Resume suspended context (required on iOS/mobile)
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
             masterGain = audioCtx.createGain();
             sfxGain = audioCtx.createGain();
             ambientGain = audioCtx.createGain();
@@ -2439,11 +2435,25 @@
             ambientGain.gain.value = 0.15;
             sfxGain.gain.value = 0.4;
             musicGain.gain.value = 0.35;
+            // iOS unlock: play a silent buffer to fully activate the context
+            var silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+            var silentSrc = audioCtx.createBufferSource();
+            silentSrc.buffer = silentBuf;
+            silentSrc.connect(audioCtx.destination);
+            silentSrc.start(0);
+            // Resume if suspended (iOS requirement)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
             audioInitialized = true;
             loadAllSfx();
             loadMusicBuffers();
         } catch(e) {}
     }
+
+    // Ensure audio init on any user interaction (iOS needs this from touch handlers)
+    document.addEventListener('touchstart', function() { initAudio(); }, { once: true });
+    document.addEventListener('click', function() { initAudio(); }, { once: true });
 
     // ---- Music System (Web Audio API gapless looping) ----
     var musicGain = null;
@@ -2618,9 +2628,10 @@
     // Game start sound — uses Audio element for instant playback on first interaction
     var _gameStartAudio = new Audio('assets/game-start.mp3');
     _gameStartAudio.volume = 0.2;
+    _gameStartAudio.load(); // preload for iOS
 
     function playGameStart() {
-        try { _gameStartAudio.currentTime = 0; _gameStartAudio.play(); } catch(e) {}
+        try { _gameStartAudio.currentTime = 0; _gameStartAudio.play().catch(function(){}); } catch(e) {}
     }
     function playCrawlerSpawn() { playSfx('crawlerSpawn'); }
     function playFlyerSpawn() { playSfx('flyerSpawn'); }
