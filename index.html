@@ -369,7 +369,7 @@
     const POINTS = { crawler: 100, flyer: 200, stalker: 150, bossHit: 50, bossDefeat: 1000, reef: 500 };
 
     // Entity Caps
-    const CAPS = { playerBullets: 2, enemyBullets: 20, enemies: 50, particles: 500, tentacles: 5, sounds: 8 };
+    const CAPS = { playerBullets: 2, enemyBullets: 20, enemies: 50, particles: 100, tentacles: 5, sounds: 8 };
 
     // Timing
     const TIMING = { deathPause: 90, waveTransition: 120, bossEntrance: 180, invincibility: 120, tentacleTelegraph: 60, tentacleActive: 120, dtCap: 15, animBase: 15 };
@@ -1856,7 +1856,7 @@
             boss.y = BOSS.targetY + (ZONES.HORIZON.y + BOSS.h - BOSS.targetY) * eased;
             // Splash during sink
             var splashY = ZONES.HORIZON.y + 5;
-            for (var si = 0; si < 30; si++) {
+            for (var si = 0; si < 8; si++) {
                 if (particles.length >= CAPS.particles) break;
                 particles.push({
                     x: boss.x + Math.random() * BOSS.w, y: splashY + (Math.random() - 0.5) * 4,
@@ -1891,7 +1891,7 @@
             }
             // Waterline splash during entrance
             var splashY = ZONES.HORIZON.y + 5;
-            for (var si = 0; si < 60; si++) {
+            for (var si = 0; si < 10; si++) {
                 if (particles.length >= CAPS.particles) break;
                 particles.push({
                     x: boss.x + Math.random() * BOSS.w, y: splashY + (Math.random() - 0.5) * 4,
@@ -1994,7 +1994,7 @@
 
         // Waterline splash — constant white water across full boss width
         var splashY = ZONES.HORIZON.y + 5;
-        var splashCount = 60;
+        var splashCount = 8;
         for (var si = 0; si < splashCount; si++) {
             if (particles.length >= CAPS.particles) break;
             var splashX = boss.x + Math.random() * BOSS.w;
@@ -2149,19 +2149,14 @@
                 ctx.fillRect(Math.round(p.x + 1), Math.round(p.y + 1), 1, 1);
             } else if (p.type === 'playerDeath') {
                 var radius = 1 + Math.random();
+                var sz = Math.round(radius * 2);
                 ctx.fillStyle = C.BLOOD_RED;
-                ctx.beginPath();
-                ctx.arc(Math.round(p.x), Math.round(p.y), radius, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), sz, sz);
                 ctx.fillStyle = C.WARN_RED;
-                ctx.beginPath();
-                ctx.arc(Math.round(p.x), Math.round(p.y), radius * 0.6, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), Math.max(1, sz - 1), Math.max(1, sz - 1));
             } else if (p.type === 'splash') {
                 ctx.fillStyle = C.FOAM_WHITE;
-                ctx.beginPath();
-                ctx.arc(Math.round(p.x), Math.round(p.y), 0.75, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), 1, 1);
             } else {
                 ctx.fillStyle = C.FOAM_WHITE;
                 ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2);
@@ -2176,15 +2171,11 @@
             if (p.type !== 'playerDeath') continue;
             var alpha = Math.max(0, p.life / p.maxLife);
             ctx.globalAlpha = alpha;
-            var radius = 1 + Math.random();
+            var sz = 2 + Math.round(Math.random());
             ctx.fillStyle = C.BLOOD_RED;
-            ctx.beginPath();
-            ctx.arc(Math.round(p.x), Math.round(p.y), radius, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(Math.round(p.x), Math.round(p.y), sz, sz);
             ctx.fillStyle = C.WARN_RED;
-            ctx.beginPath();
-            ctx.arc(Math.round(p.x), Math.round(p.y), radius * 0.6, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(Math.round(p.x), Math.round(p.y), Math.max(1, sz - 1), Math.max(1, sz - 1));
         }
         ctx.globalAlpha = 1;
     }
@@ -2379,12 +2370,15 @@
             state.stateTimer = TIMING.waveTransition;
             state._pendingBoss = true;
             devilReef.active = false;
+            enemyBullets.length = 0;
+            playerBullets.length = 0;
         } else {
             state.mode = 'WAVE_TRANSITION';
             state.stateTimer = TIMING.waveTransition;
             state.wave++;
-            // Don't reset reef cooldown — let it carry over between waves
             devilReef.active = false;
+            enemyBullets.length = 0;
+            playerBullets.length = 0;
         }
     }
 
