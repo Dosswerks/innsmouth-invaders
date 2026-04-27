@@ -1869,6 +1869,7 @@
                 tentacles.length = 0;
                 enemies.length = 0;
                 enemyBullets.length = 0;
+                playerBullets.length = 0;
                 state.mode = 'WAVE_TRANSITION';
                 state.stateTimer = TIMING.waveTransition;
                 state.wave++;
@@ -3436,6 +3437,9 @@
                 } else {
                     playMusic('main');
                 }
+                // Clear all projectiles at start of transition
+                enemyBullets = [];
+                playerBullets = [];
             }
             state.stateTimer -= dt;
             updatePlayerBullets(dt);
