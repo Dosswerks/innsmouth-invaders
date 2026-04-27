@@ -3086,32 +3086,28 @@
     // 16. Start Screen & Game Over Screen
     // ============================================================
     function renderStartScreen() {
-        if (assets.screenBg) {
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(assets.screenBg, 0, 0, W, H);
-            ctx.imageSmoothingEnabled = false;
-        } else {
+        // Wait for key assets before showing the real start screen
+        if (!assets.screenBg || !assets.logo) {
             ctx.fillStyle = C.DEEP_OCEAN;
             ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = C.CLOUD_PURPLE;
-            ctx.fillRect(0, 0, W, 90);
-            ctx.fillStyle = C.DARK_TEAL;
-            ctx.fillRect(0, 90, W, 89);
-            ctx.fillStyle = C.DARK_GRAY;
-            ctx.fillRect(0, 179, W, 45);
+            if (Math.floor(Date.now() / 400) % 2 === 0) {
+                drawTextCenter('LOADING...', 110, C.FOAM_WHITE);
+            }
+            return;
         }
 
-        if (assets.logo) {
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            var logoW = 195;
-            var logoH = 84;
-            ctx.drawImage(assets.logo, Math.round((W - logoW) / 2), 10, logoW, logoH);
-            ctx.imageSmoothingEnabled = false;
-        } else {
-            drawTextLarge('INNSMOUTH INVADERS', 50, C.SICKLY_GREEN);
-        }
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(assets.screenBg, 0, 0, W, H);
+        ctx.imageSmoothingEnabled = false;
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        var logoW = 195;
+        var logoH = 84;
+        ctx.drawImage(assets.logo, Math.round((W - logoW) / 2), 10, logoW, logoH);
+        ctx.imageSmoothingEnabled = false;
+
         drawTextCenter('Lovecraft Arcade Volume 2', 105, C.GLOW_YELLOW);
         drawTextCenter('Arrow Keys to Move', 132, C.FOAM_WHITE);
         drawTextCenter('Space or Z to Fire', 144, C.FOAM_WHITE);
