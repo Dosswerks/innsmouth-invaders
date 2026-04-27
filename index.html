@@ -3241,8 +3241,8 @@
         container.appendChild(inner);
         document.body.insertBefore(container, document.getElementById('credits'));
 
-        // Direct finger-position steering (like pole-position-clone)
-        var steerActive = false;
+        // Direct finger-position steering with touch identifier tracking
+        var steerTouchId = null;
 
         function updateSteer(touchX) {
             var rect = sliderArea.getBoundingClientRect();
@@ -3261,26 +3261,43 @@
         }
 
         function endSteer() {
-            steerActive = false;
+            steerTouchId = null;
             keys['ArrowLeft'] = false;
             keys['ArrowRight'] = false;
         }
 
         sliderArea.addEventListener('touchstart', function(e) {
             e.preventDefault();
-            steerActive = true;
-            updateSteer(e.touches[0].clientX);
+            var t = e.changedTouches[0];
+            steerTouchId = t.identifier;
+            updateSteer(t.clientX);
         });
         sliderArea.addEventListener('touchmove', function(e) {
             e.preventDefault();
-            if (steerActive && e.touches.length > 0) updateSteer(e.touches[0].clientX);
+            for (var i = 0; i < e.touches.length; i++) {
+                if (e.touches[i].identifier === steerTouchId) {
+                    updateSteer(e.touches[i].clientX);
+                    break;
+                }
+            }
         });
-        sliderArea.addEventListener('touchend', function(e) { e.preventDefault(); endSteer(); });
-        sliderArea.addEventListener('touchcancel', function(e) { endSteer(); });
+        sliderArea.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            for (var i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === steerTouchId) { endSteer(); break; }
+            }
+        });
+        sliderArea.addEventListener('touchcancel', function(e) {
+            for (var i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === steerTouchId) { endSteer(); break; }
+            }
+        });
 
-        // Fire button logic — bind to whole plate area
+        // Fire button logic — bind to whole plate area with touch ID tracking
+        var fireTouchId = null;
         fireWrap.addEventListener('touchstart', function(e) {
             e.preventDefault();
+            fireTouchId = e.changedTouches[0].identifier;
             keys['Space'] = true;
             firePressed = true;
             lastInputSource = 'touch';
@@ -3288,14 +3305,26 @@
         });
         fireWrap.addEventListener('touchend', function(e) {
             e.preventDefault();
-            keys['Space'] = false;
-            keys._fireHeld = false;
-            fireBtn.classList.remove('active');
+            for (var i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === fireTouchId) {
+                    keys['Space'] = false;
+                    keys._fireHeld = false;
+                    fireBtn.classList.remove('active');
+                    fireTouchId = null;
+                    break;
+                }
+            }
         });
         fireWrap.addEventListener('touchcancel', function(e) {
-            keys['Space'] = false;
-            keys._fireHeld = false;
-            fireBtn.classList.remove('active');
+            for (var i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === fireTouchId) {
+                    keys['Space'] = false;
+                    keys._fireHeld = false;
+                    fireBtn.classList.remove('active');
+                    fireTouchId = null;
+                    break;
+                }
+            }
         });
 
         // Initial visibility handled by resize()

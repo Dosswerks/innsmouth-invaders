@@ -14,7 +14,7 @@ Open `index.html` in any modern browser. No build step, no dependencies — just
 
 ### Mobile
 
-Touch controls appear automatically on smaller screens, styled with an art deco brass instrument panel aesthetic. A finger-position steering track on the left directly maps your touch position to the player, and a domed red fire button on the right handles shooting.
+Touch controls appear automatically on smaller screens, styled with an art deco brass instrument panel aesthetic. A finger-position steering track on the left directly maps your touch position to the player, and a domed red fire button on the right handles shooting. Multitouch is fully supported — steer and fire simultaneously.
 
 ## Game Features
 
@@ -48,7 +48,7 @@ Each round increases enemy counts and speeds. The game scales endlessly.
 
 ### Audio
 
-17 sound effects and 2 music tracks loaded via Web Audio API for gapless looping. Background music switches between normal and boss themes. Sound effects cover every action — shooting, enemy spawns, boss attacks, lightning strikes, and more. All audio files are in the `assets/` folder.
+17 sound effects and 2 looping music tracks. Background music switches between normal and boss themes. Sound effects cover every action — shooting, enemy spawns, boss attacks, lightning strikes, and more. All audio files are in the `assets/` folder.
 
 ## Credits
 
