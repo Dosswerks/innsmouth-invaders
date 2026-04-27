@@ -41,109 +41,80 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
             max-width: 500px;
             margin: 0 auto;
         }
-        #touch-slider-area {
-            flex: 1;
-            height: 80px;
+        .tc-move-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .tc-move-btn {
+            width: 75px;
+            height: 75px;
             background: linear-gradient(180deg, #2a2a28 0%, #1a1a18 40%, #222220 100%);
             border: 3px solid #8a7a50;
-            border-radius: 14px;
+            border-radius: 10px;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                inset 0 2px 8px rgba(0,0,0,0.8),
+                inset 0 0 0 6px #1a1a18,
+                inset 0 0 0 8px #6a5a38,
+                0 2px 4px rgba(0,0,0,0.5);
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
-            box-shadow:
-                inset 0 2px 6px rgba(0,0,0,0.7),
-                0 1px 0 rgba(180,160,100,0.15);
-            overflow: hidden;
+            transition: transform 0.05s;
         }
-        /* Inner groove track */
-        #touch-slider-area::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 16px;
-            right: 16px;
-            height: 14px;
-            transform: translateY(-50%);
-            background: #111;
-            border: 2px solid #6a5a38;
-            border-radius: 7px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-        }
-        /* Tick marks */
-        #touch-slider-area::after {
-            content: '';
-            position: absolute;
-            top: 12px;
-            left: 24px;
-            right: 24px;
-            height: 8px;
-            background: repeating-linear-gradient(
-                90deg,
-                transparent 0px,
-                transparent 8px,
-                #6a5a38 8px,
-                #6a5a38 9px
-            );
-            opacity: 0.5;
+        .tc-move-btn:active, .tc-move-btn.active {
+            background: linear-gradient(180deg, #3a3a35 0%, #2a2a25 40%, #333330 100%);
+            border-color: #b8a870;
+            transform: scale(0.94);
         }
         /* Corner rivets */
-        #touch-slider-rivet-tl, #touch-slider-rivet-tr,
-        #touch-slider-rivet-bl, #touch-slider-rivet-br {
+        .tc-move-btn .rivet {
             position: absolute;
             width: 8px;
             height: 8px;
             border-radius: 50%;
             background: radial-gradient(circle at 35% 35%, #b8a870, #6a5a38 70%, #4a3a20);
             box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.5);
-            z-index: 2;
         }
-        #touch-slider-rivet-tl { top: 6px; left: 6px; }
-        #touch-slider-rivet-tr { top: 6px; right: 6px; }
-        #touch-slider-rivet-bl { bottom: 6px; left: 6px; }
-        #touch-slider-rivet-br { bottom: 6px; right: 6px; }
-        #touch-slider-thumb {
-            display: none;
+        .tc-move-btn .r-tl { top: 5px; left: 5px; }
+        .tc-move-btn .r-tr { top: 5px; right: 5px; }
+        .tc-move-btn .r-bl { bottom: 5px; left: 5px; }
+        .tc-move-btn .r-br { bottom: 5px; right: 5px; }
+        /* Arrow shape */
+        .tc-arrow {
+            width: 0; height: 0;
+            border-top: 14px solid transparent;
+            border-bottom: 14px solid transparent;
         }
-        #touch-slider-label {
-            position: absolute;
-            top: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #b8a870;
-            font-size: 9px;
-            font-family: monospace;
-            font-weight: bold;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-            pointer-events: none;
-            z-index: 2;
-            background: #2a2a28;
-            padding: 0 6px;
-            border: 1px solid #6a5a38;
-            border-radius: 3px;
+        .tc-arrow-left {
+            border-right: 20px solid #8a7a50;
+            margin-right: 2px;
         }
-        /* LEFT / RIGHT labels */
-        #touch-slider-left-label, #touch-slider-right-label {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #8a7a50;
-            font-size: 9px;
-            font-family: monospace;
-            font-weight: bold;
-            letter-spacing: 2px;
-            pointer-events: none;
-            z-index: 2;
-            text-shadow: 0 1px 1px rgba(0,0,0,0.6);
+        .tc-arrow-right {
+            border-left: 20px solid #8a7a50;
+            margin-left: 2px;
         }
-        #touch-slider-left-label { left: 20px; }
-        #touch-slider-right-label { right: 20px; }
+        .tc-arrow-bar {
+            width: 6px;
+            height: 18px;
+            background: #8a7a50;
+        }
+        .tc-arrow-inner {
+            display: flex;
+            align-items: center;
+        }
+        .tc-move-btn:active .tc-arrow-left,
+        .tc-move-btn.active .tc-arrow-left { border-right-color: #b8a870; }
+        .tc-move-btn:active .tc-arrow-right,
+        .tc-move-btn.active .tc-arrow-right { border-left-color: #b8a870; }
+        .tc-move-btn:active .tc-arrow-bar,
+        .tc-move-btn.active .tc-arrow-bar { background: #b8a870; }
         #touch-fire-wrap {
             flex-shrink: 0;
             width: 110px;
@@ -3193,41 +3164,51 @@
         var inner = document.createElement('div');
         inner.className = 'tc-inner';
 
-        // Slider area
-        var sliderArea = document.createElement('div');
-        sliderArea.id = 'touch-slider-area';
-        var label = document.createElement('div');
-        label.id = 'touch-slider-label';
-        label.textContent = 'STEER';
-        // Corner rivets
-        var rivetTL = document.createElement('div'); rivetTL.id = 'touch-slider-rivet-tl';
-        var rivetTR = document.createElement('div'); rivetTR.id = 'touch-slider-rivet-tr';
-        var rivetBL = document.createElement('div'); rivetBL.id = 'touch-slider-rivet-bl';
-        var rivetBR = document.createElement('div'); rivetBR.id = 'touch-slider-rivet-br';
-        // Left/Right labels
-        var leftLabel = document.createElement('div'); leftLabel.id = 'touch-slider-left-label';
-        leftLabel.textContent = '\u25C0';
-        var rightLabel = document.createElement('div'); rightLabel.id = 'touch-slider-right-label';
-        rightLabel.textContent = '\u25B6';
-        sliderArea.appendChild(label);
-        sliderArea.appendChild(rivetTL);
-        sliderArea.appendChild(rivetTR);
-        sliderArea.appendChild(rivetBL);
-        sliderArea.appendChild(rivetBR);
-        sliderArea.appendChild(leftLabel);
-        sliderArea.appendChild(rightLabel);
+        // Left/Right buttons
+        var moveBtns = document.createElement('div');
+        moveBtns.className = 'tc-move-btns';
+
+        function createMoveBtn(dir) {
+            var btn = document.createElement('div');
+            btn.className = 'tc-move-btn';
+            // Rivets
+            var r1 = document.createElement('div'); r1.className = 'rivet r-tl';
+            var r2 = document.createElement('div'); r2.className = 'rivet r-tr';
+            var r3 = document.createElement('div'); r3.className = 'rivet r-bl';
+            var r4 = document.createElement('div'); r4.className = 'rivet r-br';
+            btn.appendChild(r1); btn.appendChild(r2); btn.appendChild(r3); btn.appendChild(r4);
+            // Arrow with bar
+            var arrowInner = document.createElement('div');
+            arrowInner.className = 'tc-arrow-inner';
+            var arrow = document.createElement('div');
+            arrow.className = 'tc-arrow tc-arrow-' + dir;
+            var bar = document.createElement('div');
+            bar.className = 'tc-arrow-bar';
+            if (dir === 'left') {
+                arrowInner.appendChild(arrow);
+                arrowInner.appendChild(bar);
+            } else {
+                arrowInner.appendChild(bar);
+                arrowInner.appendChild(arrow);
+            }
+            btn.appendChild(arrowInner);
+            return btn;
+        }
+
+        var btnL = createMoveBtn('left');
+        var btnR = createMoveBtn('right');
+        moveBtns.appendChild(btnL);
+        moveBtns.appendChild(btnR);
 
         // Fire button with brass plate
         var fireWrap = document.createElement('div');
         fireWrap.id = 'touch-fire-wrap';
-        // Rivets
         var rTL = document.createElement('div'); rTL.className = 'rivet rivet-tl';
         var rTR = document.createElement('div'); rTR.className = 'rivet rivet-tr';
         var rBL = document.createElement('div'); rBL.className = 'rivet rivet-bl';
         var rBR = document.createElement('div'); rBR.className = 'rivet rivet-br';
         fireWrap.appendChild(rTL); fireWrap.appendChild(rTR);
         fireWrap.appendChild(rBL); fireWrap.appendChild(rBR);
-        // Brass ring + button
         var fireRing = document.createElement('div');
         fireRing.id = 'touch-fire-ring';
         var fireBtn = document.createElement('div');
@@ -3236,64 +3217,47 @@
         fireRing.appendChild(fireBtn);
         fireWrap.appendChild(fireRing);
 
-        inner.appendChild(sliderArea);
+        inner.appendChild(moveBtns);
         inner.appendChild(fireWrap);
         container.appendChild(inner);
         document.body.insertBefore(container, document.getElementById('credits'));
 
-        // Direct finger-position steering with touch identifier tracking
-        var steerTouchId = null;
-
-        function updateSteer(touchX) {
-            var rect = sliderArea.getBoundingClientRect();
-            var relX = Math.max(0, Math.min(1, (touchX - rect.left) / rect.width));
-            // Map slider position directly to player X position
-            player.x = relX * (W - player.w);
-            // Also set key state for any code that checks keys
-            if (relX < 0.45) {
-                keys['ArrowLeft'] = true; keys['ArrowRight'] = false;
-            } else if (relX > 0.55) {
-                keys['ArrowLeft'] = false; keys['ArrowRight'] = true;
-            } else {
-                keys['ArrowLeft'] = false; keys['ArrowRight'] = false;
-            }
-            lastInputSource = 'touch';
-        }
-
-        function endSteer() {
-            steerTouchId = null;
-            keys['ArrowLeft'] = false;
-            keys['ArrowRight'] = false;
-        }
-
-        sliderArea.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            var t = e.changedTouches[0];
-            steerTouchId = t.identifier;
-            updateSteer(t.clientX);
-        });
-        sliderArea.addEventListener('touchmove', function(e) {
-            e.preventDefault();
-            for (var i = 0; i < e.touches.length; i++) {
-                if (e.touches[i].identifier === steerTouchId) {
-                    updateSteer(e.touches[i].clientX);
-                    break;
+        // Movement button touch handlers with ID tracking
+        function bindMove(el, key, cls) {
+            var touchId = null;
+            el.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                touchId = e.changedTouches[0].identifier;
+                keys[key] = true;
+                lastInputSource = 'touch';
+                el.classList.add('active');
+            });
+            el.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                for (var i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchId) {
+                        keys[key] = false;
+                        el.classList.remove('active');
+                        touchId = null;
+                        break;
+                    }
                 }
-            }
-        });
-        sliderArea.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            for (var i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === steerTouchId) { endSteer(); break; }
-            }
-        });
-        sliderArea.addEventListener('touchcancel', function(e) {
-            for (var i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === steerTouchId) { endSteer(); break; }
-            }
-        });
+            });
+            el.addEventListener('touchcancel', function(e) {
+                for (var i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchId) {
+                        keys[key] = false;
+                        el.classList.remove('active');
+                        touchId = null;
+                        break;
+                    }
+                }
+            });
+        }
+        bindMove(btnL, 'ArrowLeft');
+        bindMove(btnR, 'ArrowRight');
 
-        // Fire button logic — bind to whole plate area with touch ID tracking
+        // Fire button with touch ID tracking
         var fireTouchId = null;
         fireWrap.addEventListener('touchstart', function(e) {
             e.preventDefault();
@@ -3326,11 +3290,9 @@
                 }
             }
         });
-
-        // Initial visibility handled by resize()
     }
     createTouchControls();
-    resize(); // Re-run after touch controls exist
+    resize();
 
     // ============================================================
     // 19. Wharf Rendering
