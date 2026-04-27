@@ -2558,27 +2558,21 @@
             masterGain = audioCtx.createGain();
             sfxGain = audioCtx.createGain();
             ambientGain = audioCtx.createGain();
-            musicGain = audioCtx.createGain();
             sfxGain.connect(masterGain);
             ambientGain.connect(masterGain);
-            musicGain.connect(masterGain);
             masterGain.connect(audioCtx.destination);
             ambientGain.gain.value = 0.15;
             sfxGain.gain.value = 0.4;
-            musicGain.gain.value = 0.35;
             // iOS unlock: play a silent buffer to fully activate the context
             var silentBuf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
             var silentSrc = audioCtx.createBufferSource();
             silentSrc.buffer = silentBuf;
             silentSrc.connect(audioCtx.destination);
             silentSrc.start(0);
-            // Resume if suspended (iOS requirement)
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
             audioInitialized = true;
-            loadAllSfx();
-            loadMusicBuffers();
         } catch(e) {}
     }
 
@@ -2586,73 +2580,41 @@
     document.addEventListener('touchstart', function() { initAudio(); }, { once: true });
     document.addEventListener('click', function() { initAudio(); }, { once: true });
 
-    // ---- Music System (Web Audio API gapless looping) ----
-    var musicGain = null;
-    var musicBuffers = { main: null, boss: null };
-    var musicSource = null; // current AudioBufferSourceNode
+    // ---- Music System (Audio elements for iOS compatibility) ----
+    var musicElements = {};
     var musicCurrent = null; // 'main' | 'boss' | null
 
     function loadMusicBuffers() {
-        loadMusicFile('assets/music-main.mp3', 'main');
-        loadMusicFile('assets/music-boss.mp3', 'boss');
+        try {
+            var m = new Audio('assets/music-main.mp3');
+            m.loop = true; m.volume = 0.35;
+            musicElements['main'] = m;
+        } catch(e) {}
+        try {
+            var b = new Audio('assets/music-boss.mp3');
+            b.loop = true; b.volume = 0.35;
+            musicElements['boss'] = b;
+        } catch(e) {}
     }
-
-    function loadMusicFile(url, key) {
-        var rawKey = key === 'main' ? 'musicMain' : 'musicBoss';
-        var raw = sfxRawBuffers[rawKey];
-        if (raw && audioCtx) {
-            audioCtx.decodeAudioData(raw.slice(0), function(buffer) {
-                musicBuffers[key] = buffer;
-            }, function() {});
-        } else {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            xhr.responseType = 'arraybuffer';
-            xhr.onload = function() {
-                if (xhr.status === 200 && audioCtx) {
-                    audioCtx.decodeAudioData(xhr.response, function(buffer) {
-                        musicBuffers[key] = buffer;
-                    }, function() {});
-                }
-            };
-            xhr.onerror = function() {};
-            xhr.send();
-        }
-    }
+    loadMusicBuffers();
 
     function playMusic(key) {
-        if (!audioInitialized) return;
-        if (musicCurrent === key) return; // already playing this track
-        if (!musicBuffers[key]) {
-            // Buffer not decoded yet — retry shortly
-            var retries = 0;
-            var retryInterval = setInterval(function() {
-                retries++;
-                if (musicBuffers[key]) {
-                    clearInterval(retryInterval);
-                    playMusic(key);
-                } else if (retries > 50) {
-                    clearInterval(retryInterval); // give up after ~5 seconds
-                }
-            }, 100);
-            return;
-        }
+        if (state.audioMuted) return;
+        if (musicCurrent === key) return;
         stopMusic();
+        var a = musicElements[key];
+        if (!a) return;
         try {
-            var src = audioCtx.createBufferSource();
-            src.buffer = musicBuffers[key];
-            src.loop = true;
-            src.connect(musicGain);
-            src.start(0);
-            musicSource = src;
+            a.currentTime = 0;
+            var p = a.play();
+            if (p) p.catch(function(){});
             musicCurrent = key;
         } catch(e) {}
     }
 
     function stopMusic() {
-        if (musicSource) {
-            try { musicSource.stop(); } catch(e) {}
-            musicSource = null;
+        if (musicCurrent && musicElements[musicCurrent]) {
+            try { musicElements[musicCurrent].pause(); musicElements[musicCurrent].currentTime = 0; } catch(e) {}
         }
         musicCurrent = null;
     }
@@ -2666,30 +2628,15 @@
         } catch(e) {}
     }
 
-    // ---- SFX Asset Loading & Playback ----
-    var sfxBuffers = {};
+    // ---- SFX Asset Loading & Playback (Audio elements for iOS compatibility) ----
+    var sfxElements = {};
 
     function loadSfx(key, url) {
-        // Decode from pre-fetched ArrayBuffer if available, otherwise fetch
-        var raw = sfxRawBuffers[key];
-        if (raw && audioCtx) {
-            audioCtx.decodeAudioData(raw.slice(0), function(buffer) {
-                sfxBuffers[key] = buffer;
-            }, function() {});
-        } else {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            xhr.responseType = 'arraybuffer';
-            xhr.onload = function() {
-                if (xhr.status === 200 && audioCtx) {
-                    audioCtx.decodeAudioData(xhr.response, function(buffer) {
-                        sfxBuffers[key] = buffer;
-                    }, function() {});
-                }
-            };
-            xhr.onerror = function() {};
-            xhr.send();
-        }
+        try {
+            var a = new Audio(url);
+            a.volume = 0.4;
+            sfxElements[key] = a;
+        } catch(e) {}
     }
 
     function loadAllSfx() {
@@ -2711,17 +2658,28 @@
         loadSfx('flyerSpawn', 'assets/flyer-spawn.mp3');
         loadSfx('stalkerSpawn', 'assets/stalker-spawn.mp3');
     }
+    // Load immediately (no AudioContext needed)
+    loadAllSfx();
+
+    // Unlock all audio elements on first user interaction (iOS requirement)
+    var _sfxUnlocked = false;
+    function unlockSfx() {
+        if (_sfxUnlocked) return;
+        _sfxUnlocked = true;
+        for (var k in sfxElements) { try { sfxElements[k].load(); } catch(e) {} }
+        for (var k in musicElements) { try { musicElements[k].load(); } catch(e) {} }
+    }
+    document.addEventListener('touchstart', unlockSfx, { once: true });
+    document.addEventListener('click', unlockSfx, { once: true });
 
     function playSfx(key) {
-        if (!audioInitialized || state.audioMuted || activeSounds >= CAPS.sounds) return;
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        var buf = sfxBuffers[key];
-        if (!buf) return; // not loaded yet, skip silently
+        if (state.audioMuted || activeSounds >= CAPS.sounds) return;
+        var a = sfxElements[key];
+        if (!a) return;
         try {
-            var src = audioCtx.createBufferSource();
-            src.buffer = buf;
-            src.connect(sfxGain);
-            src.start(0);
+            a.currentTime = 0;
+            var p = a.play();
+            if (p) p.catch(function(){});
             activeSounds++;
             setTimeout(function() { activeSounds = Math.max(0, activeSounds - 1); }, 500);
         } catch(e) {}
@@ -2736,34 +2694,17 @@
     function playBossFire() { playSfx('bossFire'); }
     function playBossDeath() { playSfx('bossDeath'); }
     function playWaveAnnounce() {
-        if (!audioInitialized || state.audioMuted || activeSounds >= CAPS.sounds) return;
-        var buf = sfxBuffers['waveAnnounce'];
-        if (!buf) return;
-        try {
-            var src = audioCtx.createBufferSource();
-            src.buffer = buf;
-            var g = audioCtx.createGain();
-            g.gain.value = 0.3;
-            src.connect(g);
-            g.connect(sfxGain);
-            src.start(0);
-            activeSounds++;
-            setTimeout(function() { activeSounds = Math.max(0, activeSounds - 1); }, 500);
-        } catch(e) {}
+        if (state.audioMuted) return;
+        var a = sfxElements['waveAnnounce'];
+        if (!a) return;
+        try { a.volume = 0.2; a.currentTime = 0; var p = a.play(); if (p) p.catch(function(){}); } catch(e) {}
     }
     function playLightning() { playSfx('lightning'); }
     function playReefActivate() { playSfx('reefActivate'); }
     function playReefHit() { playSfx('reefHit'); }
     function playPlayerRespawn() { playSfx('playerRespawn'); }
     function playGameOver() { playSfx('gameOver'); }
-    // Game start sound — uses Audio element for instant playback on first interaction
-    var _gameStartAudio = new Audio('assets/game-start.mp3');
-    _gameStartAudio.volume = 0.2;
-    _gameStartAudio.load(); // preload for iOS
-
-    function playGameStart() {
-        try { _gameStartAudio.currentTime = 0; _gameStartAudio.play().catch(function(){}); } catch(e) {}
-    }
+    function playGameStart() { playSfx('gameStart'); }
     function playCrawlerSpawn() { playSfx('crawlerSpawn'); }
     function playFlyerSpawn() { playSfx('flyerSpawn'); }
     function playStalkerSpawn() { playSfx('stalkerSpawn'); }
