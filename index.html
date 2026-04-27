@@ -57,47 +57,50 @@
             -webkit-user-select: none;
         }
         #touch-slider-thumb {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 50px;
-            background: #3a5a7a;
-            border: 2px solid #c8d8c8;
-            border-radius: 8px;
-            pointer-events: none;
+            display: none;
         }
         #touch-slider-label {
             position: absolute;
-            bottom: 4px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 100%;
             text-align: center;
             color: #8a9a8a;
-            font-size: 10px;
+            font-size: 11px;
             font-family: monospace;
             pointer-events: none;
         }
         #touch-fire-btn {
-            width: 90px;
-            height: 70px;
-            background: #8a2a2a;
-            border: 3px solid #c8d8c8;
-            border-radius: 10px;
-            color: #c8d8c8;
-            font-size: 16px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #c44040, #8a2a2a 50%, #5a1a1a 100%);
+            border: 4px solid #4a1515;
+            box-shadow:
+                0 4px 8px rgba(0,0,0,0.6),
+                inset 0 2px 4px rgba(255,180,180,0.25),
+                inset 0 -3px 6px rgba(0,0,0,0.4);
+            color: #c8a832;
+            font-size: 13px;
             font-family: monospace;
             font-weight: bold;
-            line-height: 70px;
+            line-height: 80px;
             text-align: center;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
             flex-shrink: 0;
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
+            transition: transform 0.05s, box-shadow 0.05s;
         }
         #touch-fire-btn:active, #touch-fire-btn.active {
-            background: #ba3a3a;
-            border-color: #fff;
+            background: radial-gradient(circle at 40% 40%, #e05050, #aa3535 50%, #6a2020 100%);
+            border-color: #6a2020;
+            box-shadow:
+                0 2px 4px rgba(0,0,0,0.6),
+                inset 0 1px 2px rgba(255,200,200,0.2),
+                inset 0 -2px 4px rgba(0,0,0,0.5);
+            transform: scale(0.95);
         }
     </style>
 </head>
@@ -2421,6 +2424,10 @@
         if (audioInitialized) return;
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Resume suspended context (required on iOS/mobile)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
             masterGain = audioCtx.createGain();
             sfxGain = audioCtx.createGain();
             ambientGain = audioCtx.createGain();
@@ -2566,6 +2573,7 @@
 
     function playSfx(key) {
         if (!audioInitialized || state.audioMuted || activeSounds >= CAPS.sounds) return;
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         var buf = sfxBuffers[key];
         if (!buf) return; // not loaded yet, skip silently
         try {
@@ -3109,12 +3117,9 @@
         // Slider area
         var sliderArea = document.createElement('div');
         sliderArea.id = 'touch-slider-area';
-        var thumb = document.createElement('div');
-        thumb.id = 'touch-slider-thumb';
         var label = document.createElement('div');
         label.id = 'touch-slider-label';
-        label.textContent = '\u25C0 SLIDE \u25B6';
-        sliderArea.appendChild(thumb);
+        label.textContent = '\u25C0 TOUCH TO STEER \u25B6';
         sliderArea.appendChild(label);
 
         // Fire button
@@ -3127,53 +3132,42 @@
         container.appendChild(inner);
         document.body.insertBefore(container, document.getElementById('credits'));
 
-        // Slider logic
-        var sliderActive = false;
-        var sliderCenterX = 0;
-        var deadZone = 0.15; // 15% center dead zone
+        // Direct finger-position steering (like pole-position-clone)
+        var steerActive = false;
 
-        function updateSlider(touchX) {
+        function updateSteer(touchX) {
             var rect = sliderArea.getBoundingClientRect();
-            var relX = (touchX - rect.left) / rect.width; // 0 to 1
-            var centered = (relX - 0.5) * 2; // -1 to 1
-            // Apply dead zone
-            if (Math.abs(centered) < deadZone) {
-                keys['ArrowLeft'] = false;
-                keys['ArrowRight'] = false;
-                thumb.style.left = '50%';
+            var relX = Math.max(0, Math.min(1, (touchX - rect.left) / rect.width));
+            // Map slider position directly to player X position
+            player.x = relX * (W - player.w);
+            // Also set key state for any code that checks keys
+            if (relX < 0.45) {
+                keys['ArrowLeft'] = true; keys['ArrowRight'] = false;
+            } else if (relX > 0.55) {
+                keys['ArrowLeft'] = false; keys['ArrowRight'] = true;
             } else {
-                if (centered < 0) {
-                    keys['ArrowLeft'] = true;
-                    keys['ArrowRight'] = false;
-                } else {
-                    keys['ArrowLeft'] = false;
-                    keys['ArrowRight'] = true;
-                }
-                // Move thumb to touch position, clamped
-                var pct = Math.max(10, Math.min(90, relX * 100));
-                thumb.style.left = pct + '%';
+                keys['ArrowLeft'] = false; keys['ArrowRight'] = false;
             }
             lastInputSource = 'touch';
         }
 
-        function endSlider() {
-            sliderActive = false;
+        function endSteer() {
+            steerActive = false;
             keys['ArrowLeft'] = false;
             keys['ArrowRight'] = false;
-            thumb.style.left = '50%';
         }
 
         sliderArea.addEventListener('touchstart', function(e) {
             e.preventDefault();
-            sliderActive = true;
-            updateSlider(e.touches[0].clientX);
+            steerActive = true;
+            updateSteer(e.touches[0].clientX);
         });
         sliderArea.addEventListener('touchmove', function(e) {
             e.preventDefault();
-            if (sliderActive && e.touches.length > 0) updateSlider(e.touches[0].clientX);
+            if (steerActive && e.touches.length > 0) updateSteer(e.touches[0].clientX);
         });
-        sliderArea.addEventListener('touchend', function(e) { e.preventDefault(); endSlider(); });
-        sliderArea.addEventListener('touchcancel', function(e) { endSlider(); });
+        sliderArea.addEventListener('touchend', function(e) { e.preventDefault(); endSteer(); });
+        sliderArea.addEventListener('touchcancel', function(e) { endSteer(); });
 
         // Fire button logic
         fireBtn.addEventListener('touchstart', function(e) {
