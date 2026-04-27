@@ -14,7 +14,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
         }
         canvas {
             display: block;
@@ -31,6 +31,74 @@
         }
         #credits a { color: #aaa; text-decoration: none; }
         #credits a:hover { color: #fff; text-decoration: underline; }
+        #touch-controls {
+            display: none;
+            width: 100%;
+            padding: 8px 12px;
+            flex-shrink: 0;
+        }
+        #touch-controls .tc-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        #touch-slider-area {
+            flex: 1;
+            height: 70px;
+            background: #0a1628;
+            border: 2px solid #2d5a3d;
+            border-radius: 10px;
+            position: relative;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #touch-slider-thumb {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 50px;
+            background: #3a5a7a;
+            border: 2px solid #c8d8c8;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        #touch-slider-label {
+            position: absolute;
+            bottom: 4px;
+            width: 100%;
+            text-align: center;
+            color: #8a9a8a;
+            font-size: 10px;
+            font-family: monospace;
+            pointer-events: none;
+        }
+        #touch-fire-btn {
+            width: 90px;
+            height: 70px;
+            background: #8a2a2a;
+            border: 3px solid #c8d8c8;
+            border-radius: 10px;
+            color: #c8d8c8;
+            font-size: 16px;
+            font-family: monospace;
+            font-weight: bold;
+            line-height: 70px;
+            text-align: center;
+            flex-shrink: 0;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #touch-fire-btn:active, #touch-fire-btn.active {
+            background: #ba3a3a;
+            border-color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -2784,16 +2852,34 @@
     // 13. Canvas Scaling
     // ============================================================
     function resize() {
-        const maxW = window.innerWidth;
-        const maxH = window.innerHeight;
-        const style = getComputedStyle(document.documentElement);
-        const safeTop = parseInt(style.getPropertyValue('env(safe-area-inset-top)')) || 0;
-        const safeBottom = parseInt(style.getPropertyValue('env(safe-area-inset-bottom)')) || 0;
-        const availH = maxH - safeTop - safeBottom;
-        // Scale based on game-logic dimensions, CSS handles display size
-        const displayScale = Math.max(1, Math.floor(Math.min(maxW / W, availH / H)));
-        canvas.style.width = (W * displayScale) + 'px';
-        canvas.style.height = (H * displayScale) + 'px';
+        var maxW = window.innerWidth;
+        var maxH = window.innerHeight;
+        var isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || maxW <= 900;
+        var controlsEl = document.getElementById('touch-controls');
+        var creditsEl = document.getElementById('credits');
+        var controlsH = 0;
+        var creditsH = 0;
+
+        if (isMobile && controlsEl) {
+            controlsEl.style.display = 'block';
+            controlsH = controlsEl.offsetHeight || 90;
+        } else if (controlsEl) {
+            controlsEl.style.display = 'none';
+        }
+        if (creditsEl) creditsH = creditsEl.offsetHeight || 0;
+
+        var availH = maxH - controlsH - creditsH;
+        if (isMobile) {
+            // Full-width scaling on mobile (non-integer for best fit)
+            var scale = Math.min(maxW / W, availH / H);
+            canvas.style.width = Math.floor(W * scale) + 'px';
+            canvas.style.height = Math.floor(H * scale) + 'px';
+        } else {
+            // Integer scaling on desktop
+            var scale = Math.max(1, Math.floor(Math.min(maxW / W, availH / H)));
+            canvas.style.width = (W * scale) + 'px';
+            canvas.style.height = (H * scale) + 'px';
+        }
     }
     window.addEventListener('resize', resize);
     window.addEventListener('orientationchange', resize);
@@ -3015,37 +3101,104 @@
     // 18. Mobile Touch Controls
     // ============================================================
     function createTouchControls() {
-        const container = document.createElement('div');
+        var container = document.createElement('div');
         container.id = 'touch-controls';
-        container.style.cssText = 'display:none;position:fixed;bottom:10px;left:0;right:0;text-align:center;z-index:100;';
-        const btnStyle = 'display:inline-block;width:60px;height:60px;margin:0 8px;border:2px solid #2d5a3d;background:#0a1628;color:#c8d8c8;font-size:20px;line-height:60px;text-align:center;border-radius:8px;user-select:none;-webkit-user-select:none;touch-action:manipulation;';
-        const btnL = document.createElement('div');
-        btnL.textContent = '\u25C0'; btnL.style.cssText = btnStyle;
-        const btnR = document.createElement('div');
-        btnR.textContent = '\u25B6'; btnR.style.cssText = btnStyle;
-        const btnF = document.createElement('div');
-        btnF.textContent = 'FIRE'; btnF.style.cssText = btnStyle + 'width:80px;background:#2d5a3d;';
-        container.appendChild(btnL);
-        container.appendChild(btnF);
-        container.appendChild(btnR);
-        document.body.appendChild(container);
+        var inner = document.createElement('div');
+        inner.className = 'tc-inner';
 
-        function bind(el, key) {
-            el.addEventListener('touchstart', function(e) { e.preventDefault(); keys[key] = true; lastInputSource = 'touch'; if (key === 'Space') { firePressed = true; } });
-            el.addEventListener('touchend', function(e) { e.preventDefault(); keys[key] = false; if (key === 'Space') { keys._fireHeld = false; } });
-            el.addEventListener('touchcancel', function(e) { keys[key] = false; });
-        }
-        bind(btnL, 'ArrowLeft');
-        bind(btnR, 'ArrowRight');
-        bind(btnF, 'Space');
+        // Slider area
+        var sliderArea = document.createElement('div');
+        sliderArea.id = 'touch-slider-area';
+        var thumb = document.createElement('div');
+        thumb.id = 'touch-slider-thumb';
+        var label = document.createElement('div');
+        label.id = 'touch-slider-label';
+        label.textContent = '\u25C0 SLIDE \u25B6';
+        sliderArea.appendChild(thumb);
+        sliderArea.appendChild(label);
 
-        function checkVisibility() {
-            container.style.display = window.innerWidth <= 500 ? 'block' : 'none';
+        // Fire button
+        var fireBtn = document.createElement('div');
+        fireBtn.id = 'touch-fire-btn';
+        fireBtn.textContent = 'FIRE';
+
+        inner.appendChild(sliderArea);
+        inner.appendChild(fireBtn);
+        container.appendChild(inner);
+        document.body.insertBefore(container, document.getElementById('credits'));
+
+        // Slider logic
+        var sliderActive = false;
+        var sliderCenterX = 0;
+        var deadZone = 0.15; // 15% center dead zone
+
+        function updateSlider(touchX) {
+            var rect = sliderArea.getBoundingClientRect();
+            var relX = (touchX - rect.left) / rect.width; // 0 to 1
+            var centered = (relX - 0.5) * 2; // -1 to 1
+            // Apply dead zone
+            if (Math.abs(centered) < deadZone) {
+                keys['ArrowLeft'] = false;
+                keys['ArrowRight'] = false;
+                thumb.style.left = '50%';
+            } else {
+                if (centered < 0) {
+                    keys['ArrowLeft'] = true;
+                    keys['ArrowRight'] = false;
+                } else {
+                    keys['ArrowLeft'] = false;
+                    keys['ArrowRight'] = true;
+                }
+                // Move thumb to touch position, clamped
+                var pct = Math.max(10, Math.min(90, relX * 100));
+                thumb.style.left = pct + '%';
+            }
+            lastInputSource = 'touch';
         }
-        window.addEventListener('resize', checkVisibility);
-        checkVisibility();
+
+        function endSlider() {
+            sliderActive = false;
+            keys['ArrowLeft'] = false;
+            keys['ArrowRight'] = false;
+            thumb.style.left = '50%';
+        }
+
+        sliderArea.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            sliderActive = true;
+            updateSlider(e.touches[0].clientX);
+        });
+        sliderArea.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            if (sliderActive && e.touches.length > 0) updateSlider(e.touches[0].clientX);
+        });
+        sliderArea.addEventListener('touchend', function(e) { e.preventDefault(); endSlider(); });
+        sliderArea.addEventListener('touchcancel', function(e) { endSlider(); });
+
+        // Fire button logic
+        fireBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            keys['Space'] = true;
+            firePressed = true;
+            lastInputSource = 'touch';
+            fireBtn.classList.add('active');
+        });
+        fireBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            keys['Space'] = false;
+            keys._fireHeld = false;
+            fireBtn.classList.remove('active');
+        });
+        fireBtn.addEventListener('touchcancel', function(e) {
+            keys['Space'] = false;
+            keys._fireHeld = false;
+            fireBtn.classList.remove('active');
+        });
+
+        // Initial visibility handled by resize()
     }
     createTouchControls();
+    resize(); // Re-run after touch controls exist
 
     // ============================================================
     // 19. Wharf Rendering
