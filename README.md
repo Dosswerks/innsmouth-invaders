@@ -2,9 +2,11 @@
 
 **Lovecraft Arcade Volume 2** — A retro fixed shooter inspired by Space Invaders, set on a decaying shoreline facing a hostile sea. Fend off waves of sea-born horrors and face the mighty Cthulhu.
 
+[Play it now](https://dosswerks.github.io/innsmouth-invaders/)
+
 ## How to Play
 
-Open `index.html` in any modern browser. No build step, no dependencies — just a single HTML file.
+Open `index.html` in any modern browser. All game assets (images, audio) are in the `assets/` folder.
 
 ### Controls
 
@@ -14,7 +16,7 @@ Open `index.html` in any modern browser. No build step, no dependencies — just
 
 ### Mobile
 
-Touch controls appear automatically on smaller screens, styled with an art deco brass instrument panel aesthetic. A finger-position steering track on the left directly maps your touch position to the player, and a domed red fire button on the right handles shooting. Multitouch is fully supported — steer and fire simultaneously.
+Touch controls appear automatically on smaller screens. Left and right arrow buttons handle movement, and a fire button on the right handles shooting. Multitouch is fully supported — move and fire simultaneously.
 
 ## Game Features
 
@@ -50,8 +52,18 @@ Each round increases enemy counts and speeds. The game scales endlessly.
 
 17 sound effects and 2 looping music tracks. Background music switches between normal and boss themes. Sound effects cover every action — shooting, enemy spawns, boss attacks, lightning strikes, and more. All audio files are in the `assets/` folder.
 
+## Dependencies
+
+The game itself has no framework or build dependencies. The page includes one external script for the tip jar QR code:
+
+- [qrcode-generator](https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js) — loaded from jsDelivr CDN
+
+If hosting offline or in an environment without internet access, the QR code in the tip jar simply won't render. The game is unaffected.
+
 ## Credits
 
 A game by [Andrew Doss](https://www.andrewdoss.com).
 
 Based on [*The Shadow over Innsmouth*](https://www.hplovecraft.com/writings/fiction/soi.aspx) by H.P. Lovecraft.
+
+© 2026 Andrew Doss. All Rights Reserved.
