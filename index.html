@@ -3216,16 +3216,16 @@
         }
 
         drawTextLarge('GAME OVER', 77, C.WARN_RED);
-        drawTextCenter('SCORE: ' + state.score, 120, C.FOAM_WHITE);
-        drawTextCenter('HIGH SCORE: ' + state.highScore, 136, C.GLOW_YELLOW);
-        drawTextCenter('WAVE REACHED: ' + state.wave, 152, C.PALE_GRAY);
+        drawTextCenter('SCORE: ' + state.score, 96, C.FOAM_WHITE);
+        drawTextCenter('HIGH SCORE: ' + state.highScore, 112, C.GLOW_YELLOW);
+        drawTextCenter('WAVE REACHED: ' + state.wave, 128, C.PALE_GRAY);
         if (Math.floor(Date.now() / 500) % 2 === 0) {
-            drawTextCenter('Click or Press Any Key', 185, C.FOAM_WHITE);
-            drawTextCenter('to Restart', 195, C.FOAM_WHITE);
+            drawTextCenter('Click or Press Any Key', 142, C.FOAM_WHITE);
+            drawTextCenter('to Restart', 152, C.FOAM_WHITE);
         }
         // Tip jar QR on game over screen
         if(qrImg){
-            var qrS=25,qrX=Math.round((W-qrS)/2),qrY=207;
+            var qrS=25,qrX=Math.round((W-qrS)/2),qrY=170;
             drawTextCenter('Tips keep the games coming!', qrY-4, C.PALE_GRAY);
             ctx.imageSmoothingEnabled=true;
             ctx.fillStyle='#fff';ctx.fillRect(qrX-1,qrY-1,qrS+2,qrS+2);
