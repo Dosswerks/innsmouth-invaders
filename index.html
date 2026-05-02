@@ -444,6 +444,9 @@
     // ============================================================
     // 2. Game State
     // ============================================================
+    const ATTRACT_TITLE_DURATION = 480;  // ~8 seconds on title
+    const ATTRACT_DEMO_DURATION = 900;   // ~15 seconds of demo
+
     const state = {
         mode: 'START_SCREEN',
         stateTimer: 0,
@@ -456,6 +459,11 @@
         audioMuted: false,
         debugMode: false,
         debugPaused: false,
+        attractMode: false,
+        attractPhase: 'title',
+        attractTimer: ATTRACT_TITLE_DURATION,
+        attractDemoTimer: 0,
+        attractFrameCount: 0,
     };
 
     // ============================================================
@@ -1325,8 +1333,8 @@
             return;
         }
 
-        // Invincibility flash
-        if (player.invincible > 0 && Math.floor(player.invincible / 4) % 2 === 0) {
+        // Invincibility flash (skip during attract mode — player stays visible)
+        if (player.invincible > 0 && !state.attractMode && Math.floor(player.invincible / 4) % 2 === 0) {
             return;
         }
 
@@ -2730,7 +2738,7 @@
     document.addEventListener('click', unlockSfx, { once: true });
 
     function playSfx(key) {
-        if (state.audioMuted || activeSounds >= CAPS.sounds) return;
+        if (state.audioMuted || state.attractMode || activeSounds >= CAPS.sounds) return;
         var a = sfxElements[key];
         if (!a) return;
         try {
@@ -3127,6 +3135,7 @@
     // Debug shortcuts
     function handleDebugKeys() {
         if (!state.debugMode) return;
+        if (state.attractMode) return;
         if (keys['KeyN']) { // Next wave
             enemies.length = 0; waveState.spawning = false; waveState.spawnQueue.length = 0;
             keys['KeyN'] = false;
@@ -3186,7 +3195,7 @@
         drawTextCenter('M to Mute', 156, C.FOAM_WHITE);
         drawTextCenter('HIGH SCORE: ' + state.highScore, 168, C.GLOW_YELLOW);
         if (Math.floor(Date.now() / 500) % 2 === 0) {
-            drawTextCenter('Click or Press Any Key to Start', 195, C.FOAM_WHITE);
+            drawTextCenter('CLICK OR TAP TO START', 195, C.FOAM_WHITE);
         }
     }
 
@@ -3262,6 +3271,118 @@
         waveState.spawnQueue.length = 0;
         waveState.spawnedCount = 0;
         state.highScore = loadHighScore();
+        state.attractMode = false;
+        state.attractPhase = 'title';
+        state.attractTimer = ATTRACT_TITLE_DURATION;
+        state.attractDemoTimer = 0;
+        state.attractFrameCount = 0;
+    }
+
+    // ============================================================
+    // 17b. Attract Mode
+    // ============================================================
+    function startAttractDemo() {
+        state.attractPhase = 'demo';
+        state.attractDemoTimer = ATTRACT_DEMO_DURATION;
+        state.attractMode = true;
+        state.attractFrameCount = 0;
+        // Set up a playable wave 1
+        state.mode = 'PLAYING';
+        state.score = 0;
+        state.lives = 3;
+        state.wave = 1;
+        state.stateTimer = 0;
+        state._pendingBoss = false;
+        player.x = 104; player.y = PLAYER.y;
+        player.alive = true;
+        player.invincible = 99999; // invincible, no flashing
+        player.shotCooldown = 0;
+        player.firing = false;
+        player.firingTimer = 0;
+        player.animFrame = 0;
+        player.animTimer = 0;
+        player.deathFrame = 0;
+        player.deathTimer = 0;
+        playerBullets.length = 0;
+        enemies.length = 0;
+        enemyBullets.length = 0;
+        particles.length = 0;
+        tentacles.length = 0;
+        boss.active = false;
+        devilReef.active = false;
+        devilReef.cooldown = 99999; // no reef during demo
+        waveState.spawning = false;
+        waveState.spawnQueue.length = 0;
+        waveState.spawnedCount = 0;
+        startWave(1);
+    }
+
+    function endAttractDemo() {
+        state.attractPhase = 'title';
+        state.attractTimer = ATTRACT_TITLE_DURATION;
+        state.attractMode = false;
+        state.attractFrameCount = 0;
+        // Clear AI-driven input
+        keys['ArrowLeft'] = false;
+        keys['ArrowRight'] = false;
+        firePressed = false;
+        // Clean up and return to title
+        resetGame();
+        state.mode = 'START_SCREEN';
+        stopMusic();
+    }
+
+    function attractAI(dt) {
+        var p = player;
+        if (!p.alive) return;
+        var targetX = p.x;
+
+        // Find nearest enemy
+        var nearestDist = Infinity;
+        for (var i = 0; i < enemies.length; i++) {
+            var e = enemies[i];
+            if (!e.alive) continue;
+            var d = Math.abs(e.x + e.w / 2 - (p.x + p.w / 2));
+            if (d < nearestDist) {
+                nearestDist = d;
+                targetX = e.x + e.w / 2 - p.w / 2;
+            }
+        }
+
+        // Dodge: if an enemy bullet is close and heading toward us, shift away
+        for (var i = 0; i < enemyBullets.length; i++) {
+            var b = enemyBullets[i];
+            if (!b.alive) continue;
+            if (b.y > p.y - 60 && b.y < p.y && Math.abs(b.x - (p.x + p.w / 2)) < 30) {
+                targetX = b.x < (p.x + p.w / 2) ? p.x + 40 : p.x - 40;
+                break;
+            }
+        }
+
+        // Clamp target
+        targetX = Math.max(0, Math.min(W - p.w, targetX));
+
+        // Drive input directly (bypass real keys so input detection still works)
+        var dx = targetX - p.x;
+        keys['ArrowLeft'] = dx < -4;
+        keys['ArrowRight'] = dx > 4;
+        // Fire periodically
+        state.attractFrameCount++;
+        if (state.attractFrameCount % 18 === 0) {
+            firePressed = true;
+        }
+    }
+
+    function checkAttractBreak() {
+        // Any real user key breaks attract mode
+        // Skip keys that the AI drives directly
+        for (var k in keys) {
+            if (k === '_fireHeld') continue;
+            if (k === 'ArrowLeft' || k === 'ArrowRight') continue;
+            if (keys[k]) return true;
+        }
+        if (firePressed) return true;
+        return false;
     }
 
 
@@ -3476,9 +3597,16 @@
 
     canvas.addEventListener('click', function() {
         initAudio();
+        // Break out of attract mode demo on click
+        if (state.attractMode) {
+            endAttractDemo();
+            // Fall through to start the game from title
+        }
         if (state.mode === 'START_SCREEN') {
             state.mode = 'WAVE_TRANSITION';
             state.stateTimer = TIMING.waveTransition;
+            state.attractTimer = ATTRACT_TITLE_DURATION;
+            state.attractMode = false;
             startAmbient();
             try { playGameStart(); } catch(e) {}
         } else if (state.mode === 'GAME_OVER') {
@@ -3492,11 +3620,18 @@
     canvas.addEventListener('touchstart', function(e) {
         initAudio();
         lastInputSource = 'touch';
+        // Break out of attract mode demo on touch
+        if (state.attractMode) {
+            endAttractDemo();
+            // Fall through to start the game from title
+        }
         if (state.mode === 'START_SCREEN') {
             state.mode = 'WAVE_TRANSITION';
             state.stateTimer = TIMING.waveTransition;
+            state.attractTimer = ATTRACT_TITLE_DURATION;
+            state.attractMode = false;
             startAmbient();
-            try { playGameStart(); } catch(e) {}
+            try { playGameStart(); } catch(e2) {}
             e.preventDefault();
         } else if (state.mode === 'GAME_OVER') {
             resetGame();
@@ -3519,6 +3654,12 @@
         }
 
         if (state.mode === 'START_SCREEN') {
+            // Attract mode: count down title timer, then start demo
+            state.attractTimer -= dt;
+            if (state.attractTimer <= 0 && !state.attractMode) {
+                startAttractDemo();
+                return;
+            }
             if (handleStartInput()) {
                 initAudio();
                 state.mode = 'WAVE_TRANSITION';
@@ -3527,13 +3668,22 @@
                 try { playGameStart(); } catch(e) {}
                 for (const k in keys) keys[k] = false;
                 firePressed = false;
+                state.attractTimer = ATTRACT_TITLE_DURATION;
+                state.attractMode = false;
             }
             return;
         }
 
         if (state.mode === 'PLAYING') {
+            // Attract mode AI and timer
+            if (state.attractMode) {
+                if (checkAttractBreak()) { endAttractDemo(); return; }
+                state.attractDemoTimer -= dt;
+                if (state.attractDemoTimer <= 0) { endAttractDemo(); return; }
+                attractAI(dt);
+            }
             // Ensure music is playing (retry if initial attempt failed)
-            if (musicCurrent !== 'main') playMusic('main');
+            if (!state.attractMode && musicCurrent !== 'main') playMusic('main');
             updatePlayer(dt);
             updatePlayerBullets(dt);
             updateEnemies(dt);
@@ -3548,16 +3698,22 @@
         }
 
         if (state.mode === 'WAVE_TRANSITION') {
+            // Attract mode: check break and timer
+            if (state.attractMode) {
+                if (checkAttractBreak()) { endAttractDemo(); return; }
+                state.attractDemoTimer -= dt;
+                if (state.attractDemoTimer <= 0) { endAttractDemo(); return; }
+            }
             // Play announcement sound on first frame of transition
             if (state.stateTimer >= TIMING.waveTransition - 1) {
-                try { playWaveAnnounce(); } catch(e) {}
+                if (!state.attractMode) { try { playWaveAnnounce(); } catch(e) {} }
                 // Clear all projectiles at start of transition
                 enemyBullets = [];
                 playerBullets = [];
             }
             // Retry music each frame until it's actually playing
             var wantedMusic = state._pendingBoss ? 'boss' : 'main';
-            if (musicCurrent !== wantedMusic) {
+            if (!state.attractMode && musicCurrent !== wantedMusic) {
                 playMusic(wantedMusic);
             }
             state.stateTimer -= dt;
@@ -3595,6 +3751,12 @@
         }
 
         if (state.mode === 'DEATH_PAUSE') {
+            // Attract mode: skip death, just respawn
+            if (state.attractMode) {
+                if (checkAttractBreak()) { endAttractDemo(); return; }
+                state.attractDemoTimer -= dt;
+                if (state.attractDemoTimer <= 0) { endAttractDemo(); return; }
+            }
             if (!player.alive) {
                 player.deathTimer += dt;
                 // Sink player downward out of frame
@@ -3840,6 +4002,14 @@
 
         // Layer 16: Debug overlay
         renderDebug();
+
+        // Attract mode overlay — "CLICK OR TAP TO START" same position as title screen
+        if (state.attractMode) {
+            var blink = Math.floor(Date.now() / 500) % 2;
+            if (blink) {
+                drawTextCenter('CLICK OR TAP TO START', 195, C.FOAM_WHITE);
+            }
+        }
     }
 
     // ============================================================
